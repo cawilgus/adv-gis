@@ -1,0 +1,81 @@
+---
+title: "maps"
+author: "Cody Wilgus"
+date: "December 4, 2015"
+output: html_document
+---
+
+## Create Map of Points
+```{r}
+# load packages
+suppressWarnings(suppressPackageStartupMessages({
+  library(leaflet)
+  library(rgdal)
+}))
+
+# set paths
+gdb = 'H:/esm296-4f/lab3/golf.gdb'
+
+# read points from geodatabase
+pts = readOGR(gdb, 'pts_tree', verbose=F)
+
+# project points to geographic projection
+pts_gcs = spTransform(pts, leaflet:::epsg4326)
+
+# create map of points
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(data = pts_gcs) 
+
+```
+
+```{r}
+# create map with popups
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(data = pts_gcs, popup=~sprintf('id: %d', id))
+
+```
+
+```{r}
+# create map with Stamen.Watercolor basemap
+leaflet() %>%  
+  addProviderTiles('Stamen.Terrain') %>%
+  addMarkers(data = pts_gcs, popup=~sprintf('id: %d', id))
+
+```
+
+```{r}
+# read points, lines and polygons from geodatabase
+pts_gcs  = readOGR(gdb, 'pts_tree', verbose=F)    %>% spTransform(leaflet:::epsg4326)
+lns_gcs  = readOGR(gdb, 'lns_cart', verbose=F)    %>% spTransform(leaflet:::epsg4326)
+plys_gcs = readOGR(gdb, 'plys_bunker', verbose=F) %>% spTransform(leaflet:::epsg4326)
+
+# map with lines and polygons
+leaflet() %>%  
+  addProviderTiles('Stamen.Toner') %>%
+  addPolygons(data=plys_gcs, color="yellow", stroke = FALSE) %>%  
+  addPolylines(data=lns_gcs) %>%
+  addMarkers(data=pts_gcs, popup=~sprintf('id: %d', id))
+
+```
+
+```{r}
+# set path to your final chosen classified image
+tif = 'H:/esm296-4f/lab3/images_rect/frame387_convert1_5.tif'
+  
+# read raster, presumably in Web Mercator
+r = raster(tif, crs = leaflet:::epsg3857)
+
+# setup color palette
+pal = colorFactor('Set3', values(r), na.color='transparent')
+
+# map with raster
+leaflet() %>%  
+  addProviderTiles('Stamen.Toner') %>%
+  addRasterImage(r, colors=pal, project=F, opacity=0.8) %>%
+  addLegend(pal=pal, values=values(r), title='Habitats')
+
+```
+
+
