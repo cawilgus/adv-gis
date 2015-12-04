@@ -61,6 +61,7 @@ leaflet() %>%
 ```
 
 ```{r}
+library(raster)
 # set path to your final chosen classified image
 tif = 'H:/esm296-4f/lab3/images_rect/frame387_convert1_5.tif'
   
@@ -78,4 +79,32 @@ leaflet() %>%
 
 ```
 
+```{r, eval=FALSE}
+library(dplyr)
+library(leaflet)
+library(rgdal)
+
+gdb = 'H:/esm296-4f/lab3/golf.gdb'
+dir = 'H:/esm296-4f/lab5/adv-gis/data'
+
+# iterate through features in geodatabase
+for (fc in ogrListLayers(gdb)){
+  
+  # print paths
+  geo = sprintf('%s/%s.geojson', dir, fc)
+  tmp = tempfile()
+  cat(sprintf('gdb/fc: %s/%s\n  -> tmp: %s\n  -> geo: %s\n', gdb, fc, tmp, geo))
+  
+  # read in feature class and project to geographic
+  sp = readOGR(gdb, fc) %>%
+    spTransform(leaflet:::epsg4326)
+
+  # output to geojson
+  writeOGR(sp, dsn=tmp, layer='dummy', driver='GeoJSON')
+  
+  # move file
+  file.rename(tmp, geo)
+}
+
+```
 
